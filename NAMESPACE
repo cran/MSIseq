@@ -1,0 +1,3 @@
+export(Compute.input.variables, MSIseq.train, MSIseq.classify, read.fasta, find.mono.repeats)
+import(RWeka, rJava, R.utils)
+importFrom(IRanges, IRanges, findOverlaps)

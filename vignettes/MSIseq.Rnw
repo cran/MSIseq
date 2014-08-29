@@ -1,0 +1,175 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage[tableposition=top]{caption}
+\usepackage{ifthen}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[pdftex]{graphicx}
+\usepackage{hyperref}
+
+%\VignetteIndexEntry{MSI}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\title{Assessing Tumor Microsatellite Instability from Tumor Exome Somatic Mutations---The MSIseq Package}
+\author{Mini Huang}
+\maketitle
+
+The MSIseq package provides a mechanism for detecting microsatellite instability (MSI) in somatic mutation data from whole exome sequencing. The package provides both a classifier (detector), as well as a means to train new classifiers, which may be necessary depending on changes in variant-calling algorithms. 
+
+This package contains two main functions. The function \texttt{MSIseq.train()} generates a detector for MSI status from training data that consists of somatic mutation information and MSI status. The function \texttt{MSIseq.classify()} uses the generated detector to classify the MSI status of new tumors. The package also provides a helper function, \texttt{Compute.input.variables()}, to generate the input needed by these two functions.
+
+\section{Input data}
+
+As input, the MSIseq package requires somatic mutation information (i.e. from The Cancer Genome Atlas (TCGA) website, \url{https://tcga-data.nci.nih.gov/tcga/}) in the format of a ``mutation annotation file'' (\url{https://wiki.nci.nih.gov/display/tcga/File+Format+Specifications}). For example, \texttt{NGStraindata} and \texttt{NGStestdata} are in this format.
+
+<<NGStraindata>>=
+library('MSIseq')
+data(NGStraindata)
+data(NGStestdata)
+head(NGStraindata)
+@
+
+Usually the TCGA mutation annotation file contains 37 columns. The \texttt{NGStraindata} only contains the 5 columns that are necessary for this package and the \texttt{Compute.input.variables()} function. Any other columns are ignored. The names of the 5 columns must be exactly as shown.
+
+In the 5 columns, Chrom indicates the chromosome identifier. Start\_Position and End\_Position are the start and end positions of the mutation in the chromosome. Variant\_Type indicates the type of variant, for which the legal values are ``SNP'', ``INS'' and ``DEL''. Other values will cause an error. Tumor\_Sample\_Barcode is the sample ID.
+
+To obtain such a somatic mutation information table for your own data, you will need to create it from your sequence alignments and suitable annotation.
+
+Another information that MSIseq package needs is the sequence length, which is the total length of the genomic regions from a DNA sample captured by sequencing techniques. For example, \texttt{NGStrainseqLen} and \texttt{NGStestseqLen} contain the information.
+
+<<NGStrainseqLen>>=
+data(NGStrainseqLen)
+data(NGStestseqLen)
+head(NGStrainseqLen)
+@
+
+The sequence length table contains 2 columns, Tumor\_Sample\_Barcode and Sequence\_Length, which indicate the sample IDs and their corresponding sequence lengths in megabases. 
+
+The genomic coordinates of simple sequence repeats in the reference genome are also required by MSIseq. 
+The sequence repeats table contains 3 columns. Chrom indicates the chromosome identifier. Start\_Position and End\_Position are the start and end positions. 
+
+For example, we can get the simple sequence repeats in human genome (version Hg19) from the following link:
+<<Hg19repeats>>=
+url <- 
+"http://steverozen.net/data/Hg19repeats.rda"
+file <- basename(url)
+download.file(url, file)
+load("Hg19repeats.rda")
+head(Hg19repeats)
+@
+
+Hg19repeats is a static dataset which can be used for sequencing data generated with the same reference genome. You can also get it from \url{http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/} for other reference genome.
+
+Hg19repeats is a bed format data containing all the simple repeat regions (mono-, di-, tri-, tetra-nucleotide repeats) in the human genome version hg19. In this data, di-nucleotide, tri-nucleotide and tetra-nucleotide repeats are from the table in UCSC Genome Bioinformatics Site: \url{ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/simpleRepeat.txt.gz}.
+Mono-nucleotide repeats with a length $\geq 5$ are generated with the following two functions, \texttt{find.mono.repeats} and \texttt{find.mono.repeats} against the human hg19 genome. 
+
+Here is an example of how one can generate the mono-nucleotide repeats in one chromosome:
+
+<<download>>=
+## download the chromosome 20 sequence from UCSC
+url2 <- 
+"ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr20.fa.gz"
+file <- basename(url2)
+download.file(url2, file)
+gunzip(file)
+file <- 'chr20.fa'
+## generate mono-nucleotide repeats regions from chromosome 20
+data.chr20 = read.fasta(file)
+mono.repeats.chr20 = find.mono.repeats(data.chr20)
+names(mono.repeats.chr20)<-c('Chrom', 'Start_Position', 'End_Position')
+@
+
+Users can easily apply these functions to their own fastq file and generate their own repeats file.
+
+The MSI status information is required by \texttt{MSIseq.train()} function specifically. If your want to train a classifier with your own data, you need to have a classification table showing the clinical test result of MSI status of your samples.
+
+<<NGStrainclass>>=
+data(NGStrainclass)
+head(NGStrainclass)
+@
+
+In the classification table, Tumor\_Sample\_Barcode represents the sample ID. MSI\_status is a factor with two levels, ``MSI-H'' and ``Non-MSI-H''. Other values will cause an error. 
+
+The cancer type information is optional. If you would like to use cancer type as a candidate input for your classifier, you need to have a cancer type table.
+
+<<NGStraintype>>=
+data(NGStraintype)
+data(NGStesttype)
+head(NGStraintype)
+@
+
+In the cancer type table, Tumor\_Sample\_Barcode represents the sample ID. cancer\_type is a factor which gives the corresponding cancer types. 
+
+
+
+\section{Functions}
+
+First, the helper function \texttt{Compute.input.variables()} is used to generate the input needed by the two main functions.
+
+<<Compute.input.variables>>=
+train.mutationNum<-Compute.input.variables(NGStraindata, 
+          repeats = Hg19repeats, seq.len = NGStrainseqLen)
+@
+
+This function takes four arguments: Compute.input.variables(data, repeats, uniform.seq.len = 38, seq.len = NULL). The formats for data, repeats, and seq.len are explained in the Input data section. And the default seq.len argument is 38. This argument is used when sequences for all samples have the same length.
+
+This function computes and extracts mutation count information from the argument data. The variable sequence length is used as a denominator to generate mutation count per megabase. The mutation can be either a single nucleotide substitution (SNS) or a short insertion/deletion (indel). 
+
+The returned value is a data frame containing the following 9 variables:
+\begin{itemize}
+  \item T.sns: total count of SNSs/Mb
+  \item S.sns: count of SNSs in simple sequence repeats/Mb
+  \item T.ind: total count of indels/Mb
+  \item S.ind: count of indels in simple sequence repeats/Mb
+  \item T: total mutation count/Mb
+  \item S: mutation count in simple sequence repeats/Mb
+  \item Ratio.sns: S.sns/T.sns
+  \item Ratio.ind: S.ind/T.ind 
+  \item Ratio: S/T
+\end{itemize}
+
+Now let's look at the two main functions.
+
+<<MSIseq.train>>=
+sampleclassifier<-MSIseq.train(mutationNum = train.mutationNum, 
+    classification=NGStrainclass, cancerType = NGStraintype)
+@
+
+The function \texttt{MSIseq.train()} takes three arguments: MSIseq.train(mutationNum, classification, cancerType = NULL). The format of mutationNum should be the same as the returned value of the helper function \texttt{Compute.input.variables()}. The format for classification and cancerType are explained in the Input data section. Again, the cancerType argument is optional. It depends on whether you want to train your classifier with cancer type information.
+
+This function uses the `RWeka' package to build and evaluate a J48 decision tree with the 9 variables (or 10 variables including `cancer type'). The function will also give a five-fold cross validation result for the classification accuracy of the model.
+
+The return value for \texttt{MSIseq.train()} is a Weka\_classifier object, a J48 decision tree classifier.
+
+<<sampleclassifier>>=
+sampleclassifier
+@
+
+The two output classses of the decision tree classifier are MSI-H and Non-MSI-H. 3 variables (S.ind, T.sns, S) are chosen to build the decision tree. When training with other data, you will get a different decision tree. 
+
+In this sample classifier, the desicion tree is based on a single variable, S.ind. 
+If S.ind $> 0.395$, the tumor is classified as MSI-H. Otherwise, the classification is non-MSI-H. This classifier is also provided by MSIseq named as \texttt{NGSclassifier}. And it is offered as the default classifier for the second function, \texttt{MSIseq.classify()}. 
+
+The function \texttt{MSIseq.classify()} classifies tumors with unknown MSI status.
+
+<<MSIseq.classify>>=
+test.mutationNum<-Compute.input.variables(NGStestdata, 
+              repeats = Hg19repeats, seq.len = NGStestseqLen)
+result <- MSIseq.classify(mutationNum = test.mutationNum, 
+              cancerType = NGStesttype)
+@
+
+This function takes three arguments: MSIseq.classify(mutationNum, classifier, cancerType = NULL). The format of mutationNum should be the same as the returned value of the helper function \texttt{Compute.input.variables()}. The default classifier is a built-in classifier, NGSclassifier. You can also use your own classifier, which should be a returned value from the function \texttt{MSIseq.train()}. Remember if the input classifier is trained with cancerType argument, you should also give cancer type information in this function. And the format of cancerType should be the same as mentioned before.
+
+<<result>>=
+head(result)
+@
+
+The return value for \texttt{MSIseq.classify()} is a data frame with two columns, Tumor\_Sample\_Barcode and the corresponding classified MSI\_status. 
+
+\end{document}
+

@@ -1,0 +1,9 @@
+NGStraindata
+NGStestdata
+NGStrainseqLen
+NGStestseqLen
+NGStrainclass
+NGStraintype
+NGStesttype
+train.mutationNum
+test.mutationNum

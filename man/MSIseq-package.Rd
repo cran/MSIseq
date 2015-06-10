@@ -12,10 +12,10 @@ A decision tree classifier for detecting microsatellite instability (MSI) in som
 \tabular{ll}{
 Package: \tab MSIseq\cr
 Type: \tab Package\cr
-Depends: \tab RWeka, rJava, R.utils, R (>= 3.1.0)\cr
+Depends: \tab RWeka, rJava, R.utils, R (>= 3.2.0)\cr
 Imports: \tab RWeka, rJava, R.utils\cr
-Version: \tab 0.99.1\cr
-Date: \tab 2014-08-29\cr
+Version: \tab 1.0.0\cr
+Date: \tab 2014-06-10\cr
 }
 This package contains two main functions:
 

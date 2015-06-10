@@ -169,7 +169,7 @@ This function takes three arguments: MSIseq.classify(mutationNum, classifier, ca
 head(result)
 @
 
-The return value for \texttt{MSIseq.classify()} is a data frame with two columns, Tumor\_Sample\_Barcode and the corresponding classified MSI\_status. 
+The return value for \texttt{MSIseq.classify()} is a data frame with three columns. The first two columns are Tumor\_Sample\_Barcode and the corresponding classified MSI\_status. The third column indicates whether the sample is likely POLE deficient based on the criteria of T.sns $> 60$/Mb and S.ind $< 0.18$/Mb.
 
 \end{document}
 

@@ -1,7 +1,7 @@
-e63c4286fd53a83b79a27dcf88462476 *DESCRIPTION
+bf5b2bf2b54ae2ff9eba0d8cf3db053b *DESCRIPTION
 1f1ccd23253fcfc4805638e2d587e297 *NAMESPACE
 60f8da2d4a18cc44ee3b229a96dff9e1 *R/Compute.input.variables.R
-97e66b82a9b95c4c637e6d8230edd94e *R/MSIseq.classify.R
+8213ca54b922a63513d6d930e36fb4a1 *R/MSIseq.classify.R
 2e3a9091c630a1c82cb187b2880e41c6 *R/MSIseq.train.R
 a2341f1ab0a7b9e0a611f8d4cd8abfe1 *R/find.mono.R
 1fd21912fcb4e3cf57beec4557a1cbaa *R/sysdata.rda
@@ -15,10 +15,10 @@ d3c76218b2e542e2bccb96298b96962c *data/NGStesttype.rda
 aa332387fad6108f9c6dd98fdfb0b4a2 *data/datalist
 7825e2747f0c6d2ede73a1815328ce6e *data/test.mutationNum.rda
 15e514cf420ec1d32f709eddef650e95 *data/train.mutationNum.rda
-a59d52f106bd9de0b71bcd39d73cfa3b *inst/doc/MSIseq.pdf
+f0107875b42622abac603b4082d996ab *inst/doc/MSIseq.pdf
 b56fb05efd1d7afc60562bd0b9f5ff8b *man/Compute.input.variables.Rd
-35c5eb37bfe2ef6e6de57e57de9927f3 *man/MSIseq-package.Rd
-77d5025e1acf721af01c8cde1ed00cc4 *man/MSIseq.classify.Rd
+b3d52fded9042837a4595acc02ccd0e2 *man/MSIseq-package.Rd
+7ba697bbe82dac1283ab9bedf9b19c3f *man/MSIseq.classify.Rd
 318e9ea046318d7164f9533761bbbdd2 *man/MSIseq.train.Rd
 0fc47247e81d7caf0658feb2ae755763 *man/NGStestdata.Rd
 5c11df7630f04da5cae5fa25991ca8e8 *man/NGStestseqLen.Rd
@@ -31,4 +31,4 @@ ae98b18e447e4c061b81807698cbaa98 *man/find.mono.repeats.Rd
 9745a76f4a890ab52d6b6225be30419a *man/read.fasta.Rd
 81e95ede193e20d0766acec5a0abb56a *man/test.mutationNum.Rd
 5151f37fdbf3458f060b172ad6f3441e *man/train.mutationNum.Rd
-470488f48b5a08395a757d4b39c7d9c8 *vignettes/MSIseq.Rnw
+ece9f1541e0cd1a54720f813ad5161b3 *vignettes/MSIseq.Rnw

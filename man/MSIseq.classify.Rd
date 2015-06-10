@@ -23,10 +23,10 @@ corresponding cancer_type. Check \code{\link[MSIseq:NGStraintype]{NGStraintype}}
 
 }
 \details{
-This function gives a classification of MSI status for the samples with their \code{mutationNum} information. The classification is made with the decision tree model in \code{classifier}.
+This function gives a classification of MSI status for the samples with their \code{mutationNum} information. The classification is made with the decision tree model in \code{classifier}. It also flags the samples with likely POLE deficiency based on the criteria of high T.sns (> 60/Mb) and low S.ind (< 0.18/Mb).
 }
 \value{
-A data frame with two columns, Tumor_Sample_Barcode and the corresponding classified MSI_status. 
+A data frame with three columns: Tumor_Sample_Barcode, the corresponding classified MSI_status, and a third column indicating whether the sample is likely POLE deficient. 
 }
 \references{
 Kurt Hornik, Christian Buchta, Achim Zeileis (2009) Open-Source Machine Learning: R Meets Weka. Computational Statistics, 24(2), 225-232.
